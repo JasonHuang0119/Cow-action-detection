@@ -1,0 +1,17 @@
+*.jpg
+*.png
+*.pt
+*.pth
+*.pkl
+*.pyc
+__pycache__
+det_results
+.vscode
+ucf24
+AVA_Dataset
+*.zip
+weight
+video
+tensorboard
+results
+
