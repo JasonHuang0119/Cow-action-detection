@@ -1,0 +1,16 @@
+boxmot
+
+numpy
+
+opencv-python
+
+thop
+
+scipy
+
+matplotlib
+
+imageio
+
+scipy
+
