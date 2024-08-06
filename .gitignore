@@ -10,8 +10,11 @@ det_results
 ucf24
 AVA_Dataset
 *.zip
-weight
+weight/ava_v2.2
 video
 tensorboard
 results
-
+yowo_gat_fail.py
+yowo_GCN_fail.py
+gat.py
+gat_attention_layer.py

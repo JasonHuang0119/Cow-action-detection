@@ -115,7 +115,7 @@ def ava_eval(args, d_cfg, model, transform, collate_fn):
         version='v2.2')
     
     mAP = evaluator.evaluate_frame_map(model)
-    #evaluator.plot_results()  # 呼叫maltiplot 绘制mAP结果放在 evalator 資料夾下
+    evaluator.plot_results()  # 呼叫maltiplot 绘制mAP结果放在 evalator 資料夾下
 
 
 

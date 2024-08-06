@@ -83,6 +83,9 @@ class Criterion(object):
             tgt_labels = targets[batch_idx]["labels"].to(device)
             tgt_bboxes = targets[batch_idx]["boxes"].to(device)
 
+             # 打印标签内容 multi one hot code  Batch 9 - Labels: tensor([[0, 0, 1, 0, 0, 0, 0, 0, 0, 0]]
+            # print(f"Batch {batch_idx} - Labels: {tgt_labels}")
+
             # denormalize tgt_bbox
             tgt_bboxes *= self.img_size
 

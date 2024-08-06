@@ -171,7 +171,7 @@ def train():
         print("git:\n  {}\n".format(distributed_utils.get_sha()))
 
     # path to save model
-    path_to_save = os.path.join(args.save_folder, args.dataset, args.version,"2024_7_28_Eiou for loss_yowov2")
+    path_to_save = os.path.join(args.save_folder, args.dataset, args.version,"2024_7_31_K32")
     os.makedirs(path_to_save, exist_ok=True)
 
     # cuda

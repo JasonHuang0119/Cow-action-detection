@@ -283,10 +283,10 @@ def slowfast200(pretrained=False,**kwargs):
 
 # 建立 slowfast 模型根據模型名稱選擇不同大小的 model
 def build_slowfast_3d(model_name='slowfast50', pretrained=False, **kwargs):
-    if model_name == 'slowfast50':
+    if model_name == 'slowfastnet':
         model = slowfast50(pretrained=pretrained, **kwargs)
         feats = 2304
-    elif model_name == 'slowfastnet':
+    elif model_name == 'slowfast101':
         model = slowfast101(pretrained=pretrained, **kwargs)
         feats = 2304
     elif model_name == 'slowfast152':

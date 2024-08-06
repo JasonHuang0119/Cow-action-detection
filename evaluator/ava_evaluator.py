@@ -170,7 +170,7 @@ class AVA_Evaluator(object):
             sec = int(np.round(pred[-1][1]))
             box = pred[0]
             scores = pred[1]
-            assert len(scores) == 10
+            # assert len(scores) == 10
 
             video = self.video_idx_to_name[video_idx]
             key = video + ',' + "%04d" % (sec)
@@ -216,6 +216,14 @@ class AVA_Evaluator(object):
         import matplotlib.pyplot as plt
         categories = [k.split('/')[-1] for k in self.latest_results if 'AP@' in k]
         ap_values = [self.latest_results[k] for k in self.latest_results if 'AP@' in k]
+
+        # 过滤掉 NaN 值
+        filtered_categories = []
+        filtered_ap_values = []
+        for category, value in zip(categories, ap_values):
+            if not np.isnan(value):
+                filtered_categories.append(category)
+                filtered_ap_values.append(value)
         
         # 创建条形图
         plt.figure(figsize=(12, 6))

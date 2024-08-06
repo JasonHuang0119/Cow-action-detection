@@ -14,6 +14,8 @@ from utils.vis_tools import vis_detection
 from config import build_dataset_config, build_model_config
 from models import build_model
 from models.boxmot import OCSORT,BYTETracker
+from pytorch_grad_cam import EigenCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image, scale_cam_image
 
 
 def parse_args():
@@ -59,6 +61,16 @@ def parse_args():
 
     return parser.parse_args()
                     
+def renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam):
+    """Normalize the CAM to be in the range [0, 1]
+    inside every bounding boxes, and zero outside of the bounding boxes. """
+    renormalized_cam = np.zeros(grayscale_cam.shape, dtype=np.float32)
+    for box in boxes:
+        x1, y1, x2, y2 = map(int, box[:4])
+        renormalized_cam[y1:y2, x1:x2] = scale_cam_image(grayscale_cam[y1:y2, x1:x2].copy())
+    renormalized_cam = scale_cam_image(renormalized_cam)
+    return show_cam_on_image(image_float_np, renormalized_cam, use_rgb=True)
+
 
 def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose=False, tracker=None):
     # visualize detection results
@@ -112,6 +124,7 @@ def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose
 
 @torch.no_grad()
 def detect(args, model, device, transform, class_names, class_colors,tracker):
+    cam = EigenCAM(model=model, target_layers=target_layers)
     # path to save 
     save_path = os.path.join(args.save_folder, 'demo', 'videos')
     os.makedirs(save_path, exist_ok=True)
@@ -167,11 +180,25 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
             outputs = model(x)
             print("inference time ", time.time() - t0, "s")
 
+            # Apply EigenCAM
+            grayscale_cam = cam(input_tensor=x)[0]
+            grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
+            print(grayscale_cam_resized)
+
+
             # vis detection results
             if args.dataset in ['ava_v2.2']:
                 batch_bboxes = outputs
                 bboxes = batch_bboxes[0]
                 bboxes_np = np.array(bboxes)
+
+                renormalized_cam_image = renormalize_cam_in_bounding_boxes(bboxes_np, np.float32(frame_rgb) / 255, grayscale_cam_resized)
+                # print(renormalized_cam_image)
+                # renormalized_cam_image = (renormalized_cam_image * 255).astype(np.uint8)
+                 # Apply colormap to renormalized CAM
+                
+                cam_image = show_cam_on_image(np.float32(frame_rgb) / 255, grayscale_cam_resized , use_rgb=False)
+            
 
                 # multi hot
                 # frame = multi_hot_vis(
@@ -181,12 +208,15 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
                 #     orig_w=orig_w,
                 #     orig_h=orig_h,
                 #     class_names=class_names,
-                #     act_pose=args.pose,
+                #     act_pose=args.pose,                                                                            
                 #     tracker=tracker
                 #     )
                                 # Update and plot tracker results
-                tracker.update(bboxes_np,frame)
-                frame = tracker.plot_results(frame, show_trajectories=True, orig_w=orig_w, orig_h=orig_h, class_names=class_names)
+                
+
+                
+                tracker.update(bboxes_np,renormalized_cam_image)
+                frame = tracker.plot_results(renormalized_cam_image, show_trajectories=True, orig_w=orig_w, orig_h=orig_h, class_names=class_names)
 
 
             elif args.dataset in ['ucf24']:
@@ -276,6 +306,9 @@ if __name__ == '__main__':
 
     # to eval
     model = model.to(device).eval()
+    for name in model.named_modules():
+        print(name)
+    target_layers = [model.cls_channel_encoders[-1]]
 
     tracker = BYTETracker()
     # run
