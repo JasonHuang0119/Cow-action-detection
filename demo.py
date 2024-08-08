@@ -16,7 +16,7 @@ from models import build_model
 from models.boxmot import OCSORT,BYTETracker
 from pytorch_grad_cam import EigenCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image, scale_cam_image
-
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 def parse_args():
     parser = argparse.ArgumentParser(description='YOWOv2 Demo')
@@ -30,9 +30,9 @@ def parse_args():
                         help='use cuda.')
     parser.add_argument('--save_folder', default='det_results/', type=str,
                         help='Dir to save results')
-    parser.add_argument('-vs', '--vis_thresh', default=0.3, type=float,
+    parser.add_argument('-vs', '--vis_thresh', default=0.55, type=float,
                         help='threshold for visualization')
-    parser.add_argument('--video', default='10.mp4', type=str,
+    parser.add_argument('--video', default='./video/10.mp4', type=str,
                         help='AVA video name.')
     parser.add_argument('--gif', action='store_true', default=False, 
                         help='generate gif.')
@@ -46,11 +46,11 @@ def parse_args():
     # model
     parser.add_argument('-v', '--version', default='yowo_v2_slowfast', type=str,
                         help='build YOWOv2')
-    parser.add_argument('--weight', default='/home/jason/YOWOv2_cow/weights/ava_v2.2/yowo_v2_slowfast/2024_4_23_yowo_slowfast_SNL_nonlocal/yowo_v2_slowfast_epoch_40.pth',
+    parser.add_argument('--weight', default='./weights/yowo_v2_slowfast_epoch_58.pth',
                         type=str, help='Trained state_dict file path to open')
-    parser.add_argument('-ct', '--conf_thresh', default=0.1, type=float,
+    parser.add_argument('-ct', '--conf_thresh', default=0.3, type=float,
                         help='confidence threshold')
-    parser.add_argument('-nt', '--nms_thresh', default=0.5, type=float,
+    parser.add_argument('-nt', '--nms_thresh', default=0.55, type=float,
                         help='NMS threshold')
     parser.add_argument('--topk', default=40, type=int,
                         help='NMS threshold')
@@ -61,15 +61,18 @@ def parse_args():
 
     return parser.parse_args()
                     
-def renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam):
+def renormalize_cam_in_bounding_boxes(boxes, image_float_np, orig_w, orig_h, grayscale_cam):
     """Normalize the CAM to be in the range [0, 1]
     inside every bounding boxes, and zero outside of the bounding boxes. """
     renormalized_cam = np.zeros(grayscale_cam.shape, dtype=np.float32)
     for box in boxes:
-        x1, y1, x2, y2 = map(int, box[:4])
+        x1, y1, x2, y2 = box[:4]
+        # rescale bbox
+        x1, x2 = int(x1 * orig_w), int(x2 * orig_w)
+        y1, y2 = int(y1 * orig_h), int(y2 * orig_h)
         renormalized_cam[y1:y2, x1:x2] = scale_cam_image(grayscale_cam[y1:y2, x1:x2].copy())
     renormalized_cam = scale_cam_image(renormalized_cam)
-    return show_cam_on_image(image_float_np, renormalized_cam, use_rgb=True)
+    return show_cam_on_image(image_float_np, renormalized_cam, use_rgb=False)
 
 
 def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose=False, tracker=None):
@@ -102,7 +105,7 @@ def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose
 
         if len(scores) > 0:
             # draw bbox
-            # cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             # draw text
             blk   = np.zeros(frame.shape, np.uint8)
             font  = cv2.FONT_HERSHEY_SIMPLEX
@@ -181,9 +184,27 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
             print("inference time ", time.time() - t0, "s")
 
             # Apply EigenCAM
-            grayscale_cam = cam(input_tensor=x)[0]
+            # grayscale_cam = cam(input_tensor=x)[0]
+            # grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
+
+            outputs_box = outputs[0]  # 假設我們只關心第一個輸出
+
+            # 將 Numpy 陣列轉換為 Tensor
+            outputs_tensor = torch.from_numpy(outputs_box).to(device)
+
+            # 使用 outputs_tensor 獲取最可能的類別
+            target_categories = torch.argmax(outputs_tensor[:, 4:], dim=1)  # 假設類別分數從第五列開始
+            targets = [ClassifierOutputTarget(category.item()) for category in target_categories]
+                 
+            # Apply EigenCAM
+            grayscale_cam = cam(input_tensor=x, targets=targets, eigen_smooth=True)
+            grayscale_cam = np.transpose(grayscale_cam, (1, 2, 0)) # (1,224,224) to (224,224,1)
+            # grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
             grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
-            print(grayscale_cam_resized)
+            if len(grayscale_cam_resized.shape) == 2:
+                grayscale_cam_resized = np.expand_dims(grayscale_cam_resized, axis=2)
+                grayscale_cam_resized = np.repeat(grayscale_cam_resized, 3, axis=2)
+            # print(grayscale_cam_resized.shape)
 
 
             # vis detection results
@@ -192,31 +213,28 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
                 bboxes = batch_bboxes[0]
                 bboxes_np = np.array(bboxes)
 
-                renormalized_cam_image = renormalize_cam_in_bounding_boxes(bboxes_np, np.float32(frame_rgb) / 255, grayscale_cam_resized)
-                # print(renormalized_cam_image)
-                # renormalized_cam_image = (renormalized_cam_image * 255).astype(np.uint8)
-                 # Apply colormap to renormalized CAM
+                 # Generate the normalized CAM only inside bounding boxes
+                cam_image = renormalize_cam_in_bounding_boxes(bboxes,image_float_np=np.float32(frame_rgb) / 255, orig_h=orig_h,orig_w=orig_w, grayscale_cam=grayscale_cam_resized)
                 
-                cam_image = show_cam_on_image(np.float32(frame_rgb) / 255, grayscale_cam_resized , use_rgb=False)
+                # cam_image = show_cam_on_image(np.float32(frame_rgb) / 255, grayscale_cam_resized , use_rgb=False)
             
 
                 # multi hot
-                # frame = multi_hot_vis(
-                #     args=args,
-                #     frame=frame,
-                #     out_bboxes=bboxes,
-                #     orig_w=orig_w,
-                #     orig_h=orig_h,
-                #     class_names=class_names,
-                #     act_pose=args.pose,                                                                            
-                #     tracker=tracker
-                #     )
-                                # Update and plot tracker results
-                
-
-                
-                tracker.update(bboxes_np,renormalized_cam_image)
-                frame = tracker.plot_results(renormalized_cam_image, show_trajectories=True, orig_w=orig_w, orig_h=orig_h, class_names=class_names)
+                frame = multi_hot_vis(
+                    args=args,
+                    frame=cam_image,
+                    out_bboxes=bboxes,
+                    orig_w=orig_w,
+                    orig_h=orig_h,
+                    class_names=class_names,
+                    act_pose=args.pose,                                                                            
+                    tracker=tracker
+                    )
+                # Update and plot tracker results
+                # print(cam_image.shape[1])
+                # tracker.update(bboxes_np,frame)
+                # print(cam_image.shape[1])
+                # frame = tracker.plot_results(frame, show_trajectories=True, orig_w=orig_w, orig_h=orig_h, class_names=class_names)
 
 
             elif args.dataset in ['ucf24']:
@@ -306,9 +324,9 @@ if __name__ == '__main__':
 
     # to eval
     model = model.to(device).eval()
-    for name in model.named_modules():
-        print(name)
-    target_layers = [model.cls_channel_encoders[-1]]
+
+    target_layers = [model.reg_preds[-1]]
+    # target_layers = [model.backbone_2d.backbone.non_shared_heads[-1].cls_feats[0]]
 
     tracker = BYTETracker()
     # run
