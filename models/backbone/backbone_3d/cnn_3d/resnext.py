@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.hub import load_state_dict_from_url
 from functools import partial
-from torchinfo import summary
 from .NonLocalBlock import NonLocalBlock3D
 
 __all__ = ['resnext50', 'resnext101', 'resnet152']
