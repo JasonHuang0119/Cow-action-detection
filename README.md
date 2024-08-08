@@ -45,7 +45,7 @@
 ## 安裝  
 使用前請先安裝好 [Anaconda](https://www.anaconda.com/download)  
 
-首先，我们建議使用 Anaconda 來創建一個 conda 的虛擬環境  
+首先，我們建議使用 Anaconda 來創建一個 conda 的虛擬環境  
 
 建立新的 Python 虛擬環境，Python 版本 >= 3.8
 
@@ -97,7 +97,7 @@ pip install -r requirements.txt
 
 
 ## Demo 測試
-使用者可以参考下面的命令来測試本地的影片文件：
+使用者可以參考下面的指令来測試本地的影片文件：
 
 ```Shell
 # run demo
