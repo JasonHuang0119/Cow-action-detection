@@ -2,7 +2,6 @@ import math
 import torch
 import torch.nn as nn
 
-from termcolor import cprint
 from collections import OrderedDict
 import numpy as np
 
