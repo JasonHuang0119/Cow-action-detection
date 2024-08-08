@@ -6,7 +6,7 @@ See the paper "ShuffleNet V2: Practical Guidelines for Efficient CNN Architectur
 import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
-from torchinfo import summary
+
 
 __all__ = ['resnext50', 'resnext101', 'resnet152']
 
