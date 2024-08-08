@@ -22,8 +22,8 @@ __all__ = ['build_yolo_free']
 model_urls = {
     'yolo_free_nano': 'https://github.com/yjh0410/FreeYOLO/releases/download/weight/yolo_free_nano_coco.pth',
     'yolo_free_tiny': 'https://github.com/yjh0410/FreeYOLO/releases/download/weight/yolo_free_tiny_coco.pth',
-    'yolo_free_large': '/home/jason/YOWOv2/weights/free_yolo/yolo_free_large_coco.pth'
-    # 'yolo_free_large': 'https://github.com/yjh0410/FreeYOLO/releases/download/weight/yolo_free_large_coco.pth',
+    # 'yolo_free_large': '/home/jason/YOWOv2/weights/free_yolo/yolo_free_large_coco.pth'
+     'yolo_free_large': 'https://github.com/yjh0410/FreeYOLO/releases/download/weight/yolo_free_large_coco.pth',
     #  下面 yolo_free_large 註解是原先訓練 111 985 606 那些牛隻, 但是因為目前不用牛隻ID追蹤,所以沒有使用 效果比較不好
     # 'yolo_free_large': '/media/jason/eeac83a7-e1dc-4b57-8a2f-601e0d44c6c1/freeyolo_weights/ourdataset/yolo_free_large/yolo_free_large_epoch_291_70.09.pth',
 }
@@ -191,8 +191,8 @@ def build_yolo_free(model_name='yolo_free_large', pretrained=False):
             print('Loading 2D backbone pretrained weight: {}'.format(model_name.upper()))
 
             # state dict
-            #checkpoint = load_state_dict_from_url(url, map_location='cpu') #這是原先去抓網頁上的模型參數
-            checkpoint = torch.load(url, map_location='cpu')
+            checkpoint = load_state_dict_from_url(url, map_location='cpu') #這是原先去抓網頁上的模型參數
+            #checkpoint = torch.load(url, map_location='cpu')
             checkpoint_state_dict = checkpoint.pop('model')
 
             # model state dict
