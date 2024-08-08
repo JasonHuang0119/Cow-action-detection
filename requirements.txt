@@ -18,4 +18,4 @@ scipy
 
 torchsummary
 
-gram-cam==1.5.0
+grad-cam==1.5.0
