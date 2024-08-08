@@ -32,7 +32,7 @@ def parse_args():
                         help='Dir to save results')
     parser.add_argument('-vs', '--vis_thresh', default=0.55, type=float,
                         help='threshold for visualization')
-    parser.add_argument('--video', default='./video/10.mp4', type=str,
+    parser.add_argument('--video', default='./video/7.mp4', type=str,
                         help='AVA video name.')
     parser.add_argument('--gif', action='store_true', default=False, 
                         help='generate gif.')
