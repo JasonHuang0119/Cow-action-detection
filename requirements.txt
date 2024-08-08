@@ -12,5 +12,10 @@ matplotlib
 
 imageio
 
+termcolor
+
 scipy
 
+torchsummary
+
+gram-cam
