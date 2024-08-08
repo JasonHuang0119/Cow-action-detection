@@ -89,9 +89,9 @@ pip install -r requirements.txt
 為了能夠正常運行此項目的代碼，請確保您的 torch 版本為 2.x 系列。
 
 
-## 測試
 
-## Demo
+
+## Demo 測試
 使用者可以参考下面的命令来測試本地的影片文件：
 
 ```Shell
