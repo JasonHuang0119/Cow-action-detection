@@ -95,6 +95,14 @@ pip install -r requirements.txt
 |[yowov2](https://drive.google.com/file/d/1Ojzr2HBx0ekLyhpW5BKofDUdOt7E0ymj/view?usp=sharing)|
 |[freeyolo](https://drive.google.com/file/d/1_D7yjP-1TQT_sQH6eXuMkBLqmdjiJpj_/view?usp=sharing)|
 
+## 訓練 (參考 YOWOv2 AVA 的方式處理） 
+參考網站 https://github.com/yjh0410/YOWOv2/tree/master
+
+```Shell
+# train Custom AVA dataset
+python train.py --cuda -d ava_v2.2 --root path/to/dataset -v yowo_v2_nano --num_workers 4 --eval_epoch 1 --max_epoch 10 --lr_epoch 3 4 5 6 -lr 0.0001 -ldr 0.5 -bs 8 -accu 16 -K 16 --eval
+```
+path/to/dataset 例如: --root ./dataset 讀你在 dataset 資料夾下放著 AVA_Dataset 資料夾, {裡面內容為 annotations(標記檔）, frame_lists(訓練與測試圖片讀取的 csv 檔案）,frames (訓練/測試圖片)}
 
 ## Demo 測試
 使用者可以參考下面的指令来測試本地的影片文件：
