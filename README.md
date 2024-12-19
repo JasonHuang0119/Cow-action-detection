@@ -104,6 +104,16 @@ python train.py --cuda -d ava_v2.2 --root path/to/dataset -v yowo_v2_nano --num_
 ```
 path/to/dataset 例如: --root ./dataset 讀你在 dataset 資料夾下放著 AVA_Dataset 資料夾, {裡面內容為 annotations(標記檔）, frame_lists(訓練與測試圖片讀取的 csv 檔案）,frames (訓練/測試圖片)}
 
+## 驗證 
+```Shell
+python eval.py --cuda -d ava_v2.2 -v yowo_v2_nano -bs 16 --weight path/to/weight
+```
+
+```Shell
+# train Custom AVA dataset
+python test.py --cuda -d ava_v2.2 --root path/to/dataset -v yowo_v2_nano --num_workers 4 --eval_epoch 1 --max_epoch 10 --lr_epoch 3 4 5 6 -lr 0.0001 -ldr 0.5 -bs 8 -accu 16 -K 16 --eval
+```
+
 ## Demo 測試
 使用者可以參考下面的指令来測試本地的影片文件：
 
