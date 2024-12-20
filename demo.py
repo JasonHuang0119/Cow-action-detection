@@ -75,7 +75,7 @@ def renormalize_cam_in_bounding_boxes(boxes, image_float_np, orig_w, orig_h, gra
     return show_cam_on_image(image_float_np, renormalized_cam, use_rgb=False)
 
 
-def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose=False, tracker=None):
+def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose=False):
     # visualize detection results
     for bbox in out_bboxes:
         x1, y1, x2, y2 = bbox[:4]
@@ -127,7 +127,7 @@ def multi_hot_vis(args, frame, out_bboxes, orig_w, orig_h, class_names, act_pose
 
 @torch.no_grad()
 def detect(args, model, device, transform, class_names, class_colors,tracker):
-    cam = EigenCAM(model=model, target_layers=target_layers)
+    # cam = EigenCAM(model=model, target_layers=target_layers)
     # path to save 
     save_path = os.path.join(args.save_folder, 'demo', 'videos')
     os.makedirs(save_path, exist_ok=True)
@@ -193,17 +193,17 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
             outputs_tensor = torch.from_numpy(outputs_box).to(device)
 
             # 使用 outputs_tensor 獲取最可能的類別
-            target_categories = torch.argmax(outputs_tensor[:, 4:], dim=1)  # 假設類別分數從第五列開始
-            targets = [ClassifierOutputTarget(category.item()) for category in target_categories]
+            # target_categories = torch.argmax(outputs_tensor[:, 4:], dim=1)  # 假設類別分數從第五列開始
+            # targets = [ClassifierOutputTarget(category.item()) for category in target_categories]
                  
             # Apply EigenCAM
-            grayscale_cam = cam(input_tensor=x, targets=targets, eigen_smooth=True)
-            grayscale_cam = np.transpose(grayscale_cam, (1, 2, 0)) # (1,224,224) to (224,224,1)
+            # grayscale_cam = cam(input_tensor=x, targets=targets, eigen_smooth=True)
+            # grayscale_cam = np.transpose(grayscale_cam, (1, 2, 0)) # (1,224,224) to (224,224,1)
             # grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
-            grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
-            if len(grayscale_cam_resized.shape) == 2:
-                grayscale_cam_resized = np.expand_dims(grayscale_cam_resized, axis=2)
-                grayscale_cam_resized = np.repeat(grayscale_cam_resized, 3, axis=2)
+            # grayscale_cam_resized = cv2.resize(grayscale_cam, (orig_w, orig_h))
+            # if len(grayscale_cam_resized.shape) == 2:
+            #     grayscale_cam_resized = np.expand_dims(grayscale_cam_resized, axis=2)
+            #     grayscale_cam_resized = np.repeat(grayscale_cam_resized, 3, axis=2)
             # print(grayscale_cam_resized.shape)
 
 
@@ -214,7 +214,7 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
                 bboxes_np = np.array(bboxes)
 
                  # Generate the normalized CAM only inside bounding boxes
-                cam_image = renormalize_cam_in_bounding_boxes(bboxes,image_float_np=np.float32(frame_rgb) / 255, orig_h=orig_h,orig_w=orig_w, grayscale_cam=grayscale_cam_resized)
+                # cam_image = renormalize_cam_in_bounding_boxes(bboxes,image_float_np=np.float32(frame_rgb) / 255, orig_h=orig_h,orig_w=orig_w, grayscale_cam=grayscale_cam_resized)
                 
                 # cam_image = show_cam_on_image(np.float32(frame_rgb) / 255, grayscale_cam_resized , use_rgb=False)
             
@@ -222,13 +222,12 @@ def detect(args, model, device, transform, class_names, class_colors,tracker):
                 # multi hot
                 frame = multi_hot_vis(
                     args=args,
-                    frame=cam_image,
+                    frame=frame,
                     out_bboxes=bboxes,
                     orig_w=orig_w,
                     orig_h=orig_h,
                     class_names=class_names,
-                    act_pose=args.pose,                                                                            
-                    tracker=tracker
+                    act_pose=args.pose                                                                           
                     )
                 # Update and plot tracker results
                 # print(cam_image.shape[1])
@@ -325,15 +324,10 @@ if __name__ == '__main__':
     # to eval
     model = model.to(device).eval()
 
-    target_layers = [model.reg_preds[-1]]
-    # target_layers = [model.backbone_2d.backbone.non_shared_heads[-1].cls_feats[0]]
-
-    tracker = BYTETracker()
     # run
     detect(args=args,
             model=model,
             device=device,
             transform=basetransform,
             class_names=class_names,
-            class_colors=class_colors,
-            tracker=tracker)
+            class_colors=class_colors)
