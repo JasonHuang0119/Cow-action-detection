@@ -74,7 +74,7 @@ pip install -r requirements.txt
 
 項目作者使用的環境配置：
 
-- boxmot =  10.0.72
+- boxmot =  10.0.72 可選擇不裝
 - PyTorch = 2.2.0
 - Torchvision = 0.17.2
 - Tensorboard = 2.14.0
