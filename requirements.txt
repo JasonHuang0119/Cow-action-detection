@@ -19,3 +19,7 @@ scipy
 torchsummary
 
 grad-cam==1.5.0
+
+tensorboard
+
+
