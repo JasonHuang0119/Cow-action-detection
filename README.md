@@ -107,13 +107,8 @@ path/to/dataset 例如: --root ./dataset 讀你在 dataset 資料夾下放著 AV
 ## 驗證
 
 ```Shell
-python eval.py \
-        --cuda \
-        -d ava_v2.2 \
-        -v yowo_v2_large \
-        -bs 16 \
-        --weight path/to/weight
-
+python eval.py --cuda -d ava_v2.2 -v yowo_v2_large -bs 16 --root ./dataset --weight path/to/weight 
+# 如果記憶體出現說不夠 就調低 -bs 的數值 ex: 16 -> 8
 # --weight 請使用前面訓練完成的 yowo_v2_large.pth (也就是用 train.py 訓練出來的做驗證） 
 ```
 
