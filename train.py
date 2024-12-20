@@ -36,7 +36,7 @@ def parse_args():
     # Visualization
     parser.add_argument('--tfboard', action='store_true', default=False,
                         help='use tensorboard')
-    parser.add_argument('--save_folder', default= '/media/jason/2C904E85904E558C/YOWOv2_cow/weights/', type=str, #default='./weights/'
+    parser.add_argument('--save_folder', default= '/media/jason/eeac83a7-e1dc-4b57-8a2f-601e0d44c6c1/yowov2_weights/', type=str, #default='./weights/'
                         help='path to save weight')
     parser.add_argument('--vis_data', action='store_true', default=False,
                         help='use tensorboard')
